@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Invoice Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Elite Invoice Generator</h1>
+        </div>
+
+        <div class="section">
+            <div class="row">
+                <div class="input-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName" placeholder="Your Company Name" required aria-required="true" aria-label="Your company name">
+                </div>
+                <div class="input-group">
+                    <label>Company Address</label>
+                    <textarea id="companyAddress" placeholder="Your Company Address" required aria-required="true" aria-label="Your company address"></textarea>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-group">
+                    <label>Client Name</label>
+                    <input type="text" id="clientName" placeholder="Client Name" required aria-required="true" aria-label="Client name">
+                </div>
+                <div class="input-group">
+                    <label>Client Address</label>
+                    <textarea id="clientAddress" placeholder="Client Address" required aria-required="true" aria-label="Client address"></textarea>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-group">
+                    <label>Invoice Date</label>
+                    <input type="date" id="invoiceDate" value="2025-03-07" required aria-required="true" aria-label="Invoice date" min="2000-01-01" max="2100-12-31">
+                </div>
+                <div class="input-group">
+                    <label>Tax Rate (%)</label>
+                    <input type="number" id="taxRate" min="0" max="100" step="0.1" placeholder="e.g., 18" required aria-required="true" aria-label="Tax rate percentage">
+                </div>
+                <div class="input-group">
+                    <label>Discount (%)</label>
+                    <input type="number" id="discountRate" min="0" max="100" step="0.1" placeholder="e.g., 5" value="0" aria-label="Discount percentage">
+                </div>
+                <div class="input-group">
+                    <label>Payment Terms</label>
+                    <select id="paymentTerms" required aria-required="true" aria-label="Payment terms">
+                        <option value="Due on Receipt">Due on Receipt</option>
+                        <option value="Net 15">Net 15</option>
+                        <option value="Net 30">Net 30</option>
+                        <option value="Net 60">Net 60</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Notes/Terms</label>
+                <textarea id="notes" placeholder="Additional notes or terms (optional)" aria-label="Additional notes or terms"></textarea>
+            </div>
+
+            <table class="item-table" id="items" role="grid">
+                <thead>
+                    <tr role="row">
+                        <th>Item Name</th>
+                        <th>HSN/SAC Code</th>
+                        <th>Quantity</th>
+                        <th>Unit Price (₹)</th>
+                        <th>Total (₹)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="itemList" role="rowgroup">
+                    <tr class="item-row" role="row">
+                        <td><input type="text" class="item-name" placeholder="Item name" required aria-required="true" aria-label="Item name"></td>
+                        <td><input type="text" class="hsn-code" placeholder="HSN/SAC" aria-label="HSN or SAC code"></td>
+                        <td><input type="number" class="quantity" placeholder="0" min="0" max="999999" aria-label="Quantity"></td>
+                        <td><input type="number" class="price" placeholder="0.00" min="0" max="999999" step="0.01" aria-label="Unit price"></td>
+                        <td><input type="number" class="item-total" readonly aria-label="Item total"></td>
+                        <td>
+                            <button class="btn btn-danger" onclick="removeItem(this)" aria-label="Remove this item">X</button>
+                            <button class="btn btn-primary" onclick="duplicateItem(this)" aria-label="Duplicate this item">D</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="addItem()" aria-label="Add a new item" role="button">Add Item</button>
+                <button class="btn btn-primary" onclick="generateInvoice()" aria-label="Generate invoice" role="button">Generate Invoice</button>
+                <button class="btn btn-clear" onclick="clearForm()" aria-label="Clear all fields" role="button">Clear All</button>
+                <button class="btn btn-undo" onclick="undo()" aria-label="Undo last action" role="button">Undo</button>
+                <button class="btn btn-redo" onclick="redo()" aria-label="Redo last action" role="button">Redo</button>
+            </div>
+        </div>
+
+        <div class="preview-section" id="invoicePreview" role="region" aria-live="polite">
+            <div class="invoice-header">
+                <div>
+                    <h3 id="previewCompanyName" style="margin-bottom: 5px;"></h3>
+                    <p id="previewCompanyAddress"></p>
+                </div>
+                <div class="invoice-details">
+                    <h2 style="margin-bottom: 10px;">INVOICE</h2>
+                    <p id="previewNumber"></p>
+                    <p id="previewDate"></p>
+                    <p id="previewTerms"></p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <h4 style="margin-bottom: 10px;">Bill To:</h4>
+                    <p><strong id="previewClientName"></strong></p>
+                    <p id="previewClientAddress"></p>
+                </div>
+            </div>
+
+            <table class="item-table" role="grid">
+                <thead>
+                    <tr role="row">
+                        <th>Item Name</th>
+                        <th>HSN/SAC Code</th>
+                        <th>Quantity</th>
+                        <th>Unit Price (₹)</th>
+                        <th>Total (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="previewItems" role="rowgroup"></tbody>
+            </table>
+
+            <div class="total-section" role="region" aria-live="polite">
+                <div class="total-row" id="subtotal"></div>
+                <div class="total-row" id="discountAmount"></div>
+                <div class="total-row" id="taxAmount"></div>
+                <div class="total-row" style="font-weight: 800; font-size: 1.3em; color: #2c3e50;" id="grandTotal"></div>
+            </div>
+
+            <div class="notes-section" id="previewNotes" style="display: none;">
+                <h4 style="margin-bottom: 10px;">Notes/Terms</h4>
+                <p id="notesContent"></p>
+            </div>
+
+            <div class="footer-section">
+                <p>Terms & Conditions: Payment due within selected terms. Late payments incur a 2% monthly interest. Subject to applicable laws.</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-print" onclick="printInvoice()" aria-label="Print invoice" role="button">Print Bill</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveNotice" class="save-notice">Saved</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
